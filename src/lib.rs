@@ -1,5 +1,4 @@
-use std::io;
-use std::io::Read;
+#![no_std]
 
 const CMD_START: u8 = 0xaa;
 
@@ -136,49 +135,4 @@ fn fill_in_crc(bytes: &mut [u8]) {
 pub trait DySv5wSerialIO {
     fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()> + Send;
     fn read_byte(&mut self) -> impl Future<Output = Option<u8>> + Send;
-}
-
-pub struct Serial2ConsoleDebug {}
-
-impl DySv5wSerialIO for Serial2ConsoleDebug {
-    async fn send_data(&mut self, data: &[u8]) {
-        print!("Serial OUT: ");
-        for b in data.iter() {
-            print!("0x{:02x} ", b);
-        }
-        println!();
-    }
-
-    async fn read_byte(&mut self) -> Option<u8> {
-        println!("Enter hex value: ");
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).ok()?;
-        let input = input.trim();
-
-        let hex_str = input.strip_prefix("0x")
-            .or_else(|| input.strip_prefix("0X"))
-            .unwrap_or(input);
-
-        u8::from_str_radix(hex_str, 16).ok()
-    }
-}
-
-pub struct Serial2SerialPort {
-    pub serial: Box<dyn serialport::SerialPort>
-}
-
-impl DySv5wSerialIO for Serial2SerialPort {
-    async fn send_data(&mut self, data: &[u8]) {
-        let _ = self.serial.write_all(data);
-        let _ = self.serial.flush();
-    }
-
-    async fn read_byte(&mut self) -> Option<u8> {
-        let mut rcv_buffer = [0u8; 1];
-        let result = self.serial.read_exact(&mut rcv_buffer);
-        match result {
-            Ok(_) => Some(rcv_buffer[0]),
-            Err(_) => None
-        }
-    }
 }
