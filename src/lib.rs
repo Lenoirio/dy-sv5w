@@ -1,5 +1,5 @@
 #![no_std]
-
+use core::future::Future;
 const CMD_START: u8 = 0xaa;
 
 
@@ -17,6 +17,15 @@ pub enum Drive {
     SD,
     Flash,
     NoDevice
+}
+
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub enum EqualizerMode {
+    Normal,
+    Pop,
+    Rock,
+    Jazz,
+    Classic
 }
 
 pub struct DySv5w<T> {
@@ -85,6 +94,11 @@ where T: DySv5wSerialIO
         self.send_with_crc(&mut cmd).await;
     }
 
+    pub async fn set_equalizer_mode(&mut self, mode: EqualizerMode) {
+        let mut cmd = [CMD_START, 0x1a, 0x01, mode.to_u8(), 0];
+        self.send_with_crc(&mut cmd).await;
+    }
+    
     pub async fn query_play_status(&mut self) -> Option<PlayState> {
         let mut cmd = [CMD_START, 0x01, 0x00, 0];
         self.send_with_crc(&mut cmd).await;
@@ -226,6 +240,18 @@ impl Drive {
             Drive::SD => { 1 }
             Drive::Flash => { 2 }
             Drive::NoDevice => { 0xff }
+        }
+    }
+}
+
+impl EqualizerMode {
+    fn to_u8(self) -> u8 {
+        match self {
+            EqualizerMode::Normal => { 0 }
+            EqualizerMode::Pop => { 1 }
+            EqualizerMode::Rock => { 2 }
+            EqualizerMode::Jazz => { 3 }
+            EqualizerMode::Classic => { 4 }
         }
     }
 }

@@ -1,5 +1,5 @@
 use std::time::Duration;
-use dy_sv5w::{DySv5w, DySv5wSerialIO};
+use dy_sv5w::{DySv5w, DySv5wSerialIO, EqualizerMode};
 
 pub struct Serial2SerialPort {
     pub serial: Box<dyn serialport::SerialPort>
@@ -40,13 +40,14 @@ async fn main() {
         println!("Number of songs {:?}", dy.query_number_songs().await);
 
 
-        dy.set_volume(5).await;
+        dy.set_equalizer_mode(EqualizerMode::Rock).await;
+        dy.set_volume(10).await;
 
         dy.specify_song(1).await;
         dy.play().await;
 
         // play() usually blocks the device-UART for a short time. Wait before using the next commands
-        let _ = tokio::time::sleep(Duration::from_millis(500));
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
 
         println!("PlayStatus {:?}", dy.query_play_status().await);
