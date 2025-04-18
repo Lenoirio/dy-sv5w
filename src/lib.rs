@@ -220,8 +220,8 @@ fn get_word(bytes: &[u8; 2]) -> u16 {
 }
 
 pub trait DySv5wSerialIO {
-    fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()> + Send;
-    fn read_byte(&mut self) -> impl Future<Output = Option<u8>> + Send;
+    fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()>;
+    fn read_byte(&mut self) -> impl Future<Output = Option<u8>>;
 }
 
 impl Drive {
