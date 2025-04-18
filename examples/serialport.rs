@@ -1,5 +1,5 @@
 use std::time::Duration;
-use dy_sv5w::{DySv5w, DySv5wSerialIO};
+use dy_sv5w::{Drive, DySv5w, DySv5wSerialIO};
 
 pub struct Serial2SerialPort {
     pub serial: Box<dyn serialport::SerialPort>
@@ -28,15 +28,19 @@ async fn main() {
         .timeout(Duration::from_millis(250))
         .open();
 
-    if let Ok(mut port) = port {
+    if let Ok(port) = port {
         let sport = Serial2SerialPort {
             serial: port
         };
 
         let mut dy = DySv5w::new(sport);
         dy.set_volume(128).await;
-        println!("{:?}", dy.query_play_status().await);
-    
+        println!("PlayStatus {:?}", dy.query_play_status().await);
+
+        dy.switch_specified_drive(Drive::Flash).await;
+
+        println!("Current play drive {:?}", dy.query_current_play_drive().await);
+        println!("Current online drive {:?}", dy.query_current_online_drive().await);
     } else {
         println!("Failed to open serial port");
     }

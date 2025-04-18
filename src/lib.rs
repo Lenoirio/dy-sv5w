@@ -10,6 +10,15 @@ pub enum PlayState {
     Pause,
     Unknown
 }
+
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub enum Drive {
+    USB,
+    SD,
+    Flash,
+    NoDevice
+}
+
 pub struct DySv5w<T> {
     serial: T
 }
@@ -84,6 +93,33 @@ where T: DySv5wSerialIO
         }
     }
 
+    pub async fn switch_specified_drive(&mut self, drive: Drive) {
+        let mut cmd = [CMD_START, 0x0b, 0x01, drive.to_u8(), 0];
+        self.send_with_crc(&mut cmd).await;
+    }
+    
+    pub async fn query_current_play_drive(&mut self) -> Option<Drive> {
+        let mut cmd = [CMD_START, 0x0a, 0x00, 0];
+        self.send_with_crc(&mut cmd).await;
+        let mut rcv_buffer = [0u8; 1];
+        if self.receive_answer(0x0a, &mut rcv_buffer).await {
+            Some(Drive::from_u8(rcv_buffer[0]))
+        } else {
+            None
+        }
+    }
+
+    pub async fn query_current_online_drive(&mut self) -> Option<Drive> {
+        let mut cmd = [CMD_START, 0x09, 0x00, 0];
+        self.send_with_crc(&mut cmd).await;
+        let mut rcv_buffer = [0u8; 1];
+        if self.receive_answer(0x09, &mut rcv_buffer).await {
+            Some(Drive::from_u8(rcv_buffer[0]))
+        } else {
+            None
+        }
+    }
+    
     async fn send_with_crc(&mut self, cmd: &mut [u8]) {
         fill_in_crc(cmd);
         self.serial.send_data(cmd).await
@@ -135,4 +171,24 @@ fn fill_in_crc(bytes: &mut [u8]) {
 pub trait DySv5wSerialIO {
     fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()> + Send;
     fn read_byte(&mut self) -> impl Future<Output = Option<u8>> + Send;
+}
+
+impl Drive {
+    fn from_u8(value: u8) -> Drive {
+        match value {
+            0 => Drive::USB,
+            1 => Drive::SD,
+            2 => Drive::Flash,
+            _ => Drive::NoDevice,
+        }
+    }
+    
+    fn to_u8(self) -> u8 {
+        match self {
+            Drive::USB => { 0 }
+            Drive::SD => { 1 }
+            Drive::Flash => { 2 }
+            Drive::NoDevice => { 0xff }
+        }
+    }
 }
