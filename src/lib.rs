@@ -32,6 +32,7 @@ where T: DySv5wSerialIO
         }
     }
 
+    /// volume is in the range of 0..30
     pub async fn set_volume(&mut self, volume: u8) {
         let mut cmd = [CMD_START, 0x13, 0x01, volume, 0x00];
         self.send_with_crc(&mut cmd).await;
@@ -76,6 +77,13 @@ where T: DySv5wSerialIO
         let mut cmd = [CMD_START, 0x10, 0x00, 0];
         self.send_with_crc(&mut cmd).await;
     }
+    
+    pub async fn specify_song(&mut self, song: u16) {
+        let high = (song >> 8) as u8;
+        let low = (song & 0xFF) as u8;
+        let mut cmd = [CMD_START, 0x07, 0x02, high, low, 0];
+        self.send_with_crc(&mut cmd).await;
+    }
 
     pub async fn query_play_status(&mut self) -> Option<PlayState> {
         let mut cmd = [CMD_START, 0x01, 0x00, 0];
@@ -97,7 +105,7 @@ where T: DySv5wSerialIO
         let mut cmd = [CMD_START, 0x0b, 0x01, drive.to_u8(), 0];
         self.send_with_crc(&mut cmd).await;
     }
-    
+
     pub async fn query_current_play_drive(&mut self) -> Option<Drive> {
         let mut cmd = [CMD_START, 0x0a, 0x00, 0];
         self.send_with_crc(&mut cmd).await;
@@ -119,7 +127,30 @@ where T: DySv5wSerialIO
             None
         }
     }
-    
+
+    pub async fn query_number_songs(&mut self) -> Option<u16> {
+        let mut cmd = [CMD_START, 0x0c, 0x00, 0];
+        self.send_with_crc(&mut cmd).await;
+        let mut rcv_buffer = [0u8; 2];
+        if self.receive_answer(0x0c, &mut rcv_buffer).await {
+            Some(get_word(&rcv_buffer))
+        } else {
+            None
+        }
+    }
+
+    pub async fn query_current_song(&mut self) -> Option<u16> {
+        let mut cmd = [CMD_START, 0x0d, 0x00, 0];
+        self.send_with_crc(&mut cmd).await;
+        let mut rcv_buffer = [0u8; 2];
+        if self.receive_answer(0x0d, &mut rcv_buffer).await {
+            Some(get_word(&rcv_buffer))
+        } else {
+            None
+        }
+    }
+
+
     async fn send_with_crc(&mut self, cmd: &mut [u8]) {
         fill_in_crc(cmd);
         self.serial.send_data(cmd).await
@@ -168,6 +199,12 @@ fn fill_in_crc(bytes: &mut [u8]) {
     bytes[bytes.len()-1] = (crc&0xff) as u8;
 }
 
+fn get_word(bytes: &[u8; 2]) -> u16 {
+    let mut word: u16 = (bytes[0] as u16) << 8;
+    word |= bytes[1] as u16;
+    word
+}
+
 pub trait DySv5wSerialIO {
     fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()> + Send;
     fn read_byte(&mut self) -> impl Future<Output = Option<u8>> + Send;
@@ -182,7 +219,7 @@ impl Drive {
             _ => Drive::NoDevice,
         }
     }
-    
+
     fn to_u8(self) -> u8 {
         match self {
             Drive::USB => { 0 }

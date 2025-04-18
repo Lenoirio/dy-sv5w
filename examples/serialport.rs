@@ -1,5 +1,5 @@
 use std::time::Duration;
-use dy_sv5w::{Drive, DySv5w, DySv5wSerialIO};
+use dy_sv5w::{DySv5w, DySv5wSerialIO};
 
 pub struct Serial2SerialPort {
     pub serial: Box<dyn serialport::SerialPort>
@@ -34,13 +34,23 @@ async fn main() {
         };
 
         let mut dy = DySv5w::new(sport);
-        dy.set_volume(128).await;
-        println!("PlayStatus {:?}", dy.query_play_status().await);
-
-        dy.switch_specified_drive(Drive::Flash).await;
 
         println!("Current play drive {:?}", dy.query_current_play_drive().await);
         println!("Current online drive {:?}", dy.query_current_online_drive().await);
+        println!("Number of songs {:?}", dy.query_number_songs().await);
+
+
+        dy.set_volume(5).await;
+
+        dy.specify_song(1).await;
+        dy.play().await;
+
+        // play() usually blocks the device-UART for a short time. Wait before using the next commands
+        let _ = tokio::time::sleep(Duration::from_millis(500));
+
+
+        println!("PlayStatus {:?}", dy.query_play_status().await);
+        println!("Current song# {:?}", dy.query_current_song().await);
     } else {
         println!("Failed to open serial port");
     }
