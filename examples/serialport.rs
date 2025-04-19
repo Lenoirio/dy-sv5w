@@ -25,7 +25,7 @@ impl DySv5wSerialIO for Serial2SerialPort {
 async fn main() {
 
     let port = serialport::new("/dev/ttyUSB0", 9600)
-        .timeout(Duration::from_millis(250))
+        .timeout(Duration::from_millis(1000))
         .open();
 
     if let Ok(port) = port {
