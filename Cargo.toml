@@ -2,7 +2,7 @@
 name = "dy-sv5w"
 version = "0.1.0"
 edition = "2021"
-authors = ["Markus Gietzen"]
+authors = ["Markus Gietzen <markus@gietzen.de>"]
 description = "A crate for the UART-mode of a DY-SV5W voice module (and the ones with the same UART protocol)"
 license = "MIT"
 homepage = "https://github.com/Lenoirio/dy-sv5w"
