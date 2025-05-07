@@ -94,6 +94,13 @@ where T: DySv5wSerialIO
         self.send_with_crc(&mut cmd).await;
     }
 
+    pub async fn set_cycle_times(&mut self, times: u16) {
+        let high = (times >> 8) as u8;
+        let low = (times & 0xFF) as u8;
+        let mut cmd = [CMD_START, 0x19, 0x02, high, low, 0];
+        self.send_with_crc(&mut cmd).await;
+    }
+
     pub async fn set_equalizer_mode(&mut self, mode: EqualizerMode) {
         let mut cmd = [CMD_START, 0x1a, 0x01, mode.to_u8(), 0];
         self.send_with_crc(&mut cmd).await;
