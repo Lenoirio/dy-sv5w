@@ -1,6 +1,4 @@
 # dy-sv5w
-A crate for the UART-mode of the DY-SV5W voice module (and those with the same protocol).
-
 This is a [no-std] crate which uses a trait to handle I/O. 
 See the two examples on how to implement such an interface to your UART.
 Although primarily designed for embedded usage, it uses ASYNC to profit from async-frameworks like Embassy.
@@ -16,7 +14,7 @@ That's how I developed the code before I switched to an embedded system.
         dy.specify_song(1).await;
         dy.play().await;
 ```
-The above example sets the Equalizer to use the Rock-settings, volume to 10 (max value is 30). Then song number 1 is selected and playback is started.
+The above example sets the Equalizer to use the Rock settings, volume to 10 (max value is 30). Then song number 1 is selected and playback is started.
 
 *Hint*: The module sometimes needs (e.g., after issuing play()) a short delay before it accepts the next command.
 
@@ -27,6 +25,10 @@ It looks like the module rather counts the number in the FAT directory structure
 
 Another important hint: Although the module needs +5V, the level for I/O-pins (including the UART) is *3.3 V*
 
+The device can't operate as a USB storage-device. Neither Linux nor Windows can detect it as a drive.
+It will be reported with 'lsusb' but not as a storage device.
+If you intend to power the module via the USB-port, make sure that your USB-cable is not plugged in a PC or the USB-cable just has no data-wires.
+Reason: In case the device is communicating via USB, it will not start in UART mode.
 
 ## Interfacing with your UART
 As mentioned, you need to implement the trait DySv5wSerialIO and use it within the DySv5w struct. 
