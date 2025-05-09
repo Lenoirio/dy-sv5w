@@ -16,8 +16,6 @@ That's how I developed the code before I switched to an embedded system.
 ```
 The above example sets the Equalizer to use the Rock settings, volume to 10 (max value is 30). Then song number 1 is selected and playback is started.
 
-*Hint*: The module sometimes needs (e.g., after issuing play()) a short delay before it accepts the next command.
-
 Most of the commands are fire-and-forget commands. This means there is no ack/nack sent from the module. Thus, it's not possible to provide the API caller with success information.
 
 The naming of the files on the module is a bit awkward. See the documentation but don't expect that the file called 00001.mp3 is always the song that you address with number 1.

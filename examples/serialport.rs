@@ -46,10 +46,6 @@ async fn main() {
         dy.specify_song(1).await;
         dy.play().await;
 
-        // play() usually blocks the device-UART for a short time. Wait before using the next commands
-        tokio::time::sleep(Duration::from_millis(500)).await;
-
-
         println!("PlayStatus {:?}", dy.query_play_status().await);
         println!("Current song# {:?}", dy.query_current_song().await);
     } else {

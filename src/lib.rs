@@ -1,3 +1,8 @@
+//! Library for UART-mode of the DY-SV5W voice module (and compatible modules)
+//!
+//! This is a [no-std] crate which uses a trait to handle I/O. See the two examples on how to implement such an interface to your UART.
+//! Although primarily designed for embedded usage, it uses ASYNC to profit from async-frameworks like Embassy.
+//!
 #![no_std]
 use core::future::Future;
 const CMD_START: u8 = 0xaa;
@@ -41,12 +46,14 @@ where T: DySv5wSerialIO
         }
     }
 
-    /// volume is in the range of 0..30
+    /// Set the volume of at an absolute value
+    /// volume is in the range of 0..31
     pub async fn set_volume(&mut self, volume: u8) {
         let mut cmd = [CMD_START, 0x13, 0x01, volume, 0x00];
         self.send_with_crc(&mut cmd).await;
     }
 
+    /// Starts playing the currently selected song. Use 'specify_song()' to select which one.
     pub async fn play(&mut self) {
         let mut cmd = [CMD_START, 0x02, 0x00, 0];
         self.send_with_crc(&mut cmd).await;
@@ -88,16 +95,15 @@ where T: DySv5wSerialIO
     }
     
     pub async fn specify_song(&mut self, song: u16) {
-        let high = (song >> 8) as u8;
-        let low = (song & 0xFF) as u8;
-        let mut cmd = [CMD_START, 0x07, 0x02, high, low, 0];
+        let hl = song.to_be_bytes();
+        let mut cmd = [CMD_START, 0x07, 0x02, hl[0], hl[1], 0];
         self.send_with_crc(&mut cmd).await;
     }
 
+    /// The effect of this configuration is unclear for now
     pub async fn set_cycle_times(&mut self, times: u16) {
-        let high = (times >> 8) as u8;
-        let low = (times & 0xFF) as u8;
-        let mut cmd = [CMD_START, 0x19, 0x02, high, low, 0];
+        let hl = times.to_be_bytes();
+        let mut cmd = [CMD_START, 0x19, 0x02, hl[0], hl[1], 0];
         self.send_with_crc(&mut cmd).await;
     }
 
@@ -226,8 +232,13 @@ fn get_word(bytes: &[u8; 2]) -> u16 {
     word
 }
 
+/// This trait needs to be implemented as an interface to the actual hardware interfacing the sound module
+/// The UART needs to be set up with 9600,8N1
 pub trait DySv5wSerialIO {
+    /// Sends out data buffer. Expects output to be flushed.
     fn send_data(&mut self, data: &[u8]) -> impl Future<Output = ()>;
+    /// Reads one byte from serial port. Timeout should be around 1 second.
+    /// Read-error or timeout is indicated by returning NONE
     fn read_byte(&mut self) -> impl Future<Output = Option<u8>>;
 }
 

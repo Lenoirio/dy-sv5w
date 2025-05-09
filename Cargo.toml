@@ -1,6 +1,6 @@
 [package]
 name = "dy-sv5w"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Markus Gietzen <markus@gietzen.de>"]
 description = "A crate for the UART-mode of a DY-SV5W voice module (and the ones with the same UART protocol)"
@@ -10,5 +10,5 @@ repository = "https://github.com/Lenoirio/dy-sv5w"
 keywords = ["embedded", "hardware-support", "multimedia", "no-std"]
 
 [dev-dependencies]
-tokio = { version = "1.44.2", features = ["rt", "rt-multi-thread", "macros", "time"] }
+tokio = { version = "1.45.0", features = ["rt", "rt-multi-thread", "macros", "time"] }
 serialport = "4.7.1"
